@@ -6,6 +6,8 @@
 #include <locale.h>
 #include "linear.h"
 #include "tron.h"
+#include "ThreadPool.h"
+
 typedef signed char schar;
 template <class T> static inline void swap(T& x, T& y) { T t=x; x=y; y=t; }
 #ifndef min
@@ -430,19 +432,19 @@ void l2r_l2_svr_fun::grad(double *w, double *g)
 		g[i] = w[i] + 2*g[i];
 }
 
-// A coordinate descent algorithm for 
+// A coordinate descent algorithm for
 // multi-class support vector machines by Crammer and Singer
 //
 //  min_{\alpha}  0.5 \sum_m ||w_m(\alpha)||^2 + \sum_i \sum_m e^m_i alpha^m_i
 //    s.t.     \alpha^m_i <= C^m_i \forall m,i , \sum_m \alpha^m_i=0 \forall i
-// 
+//
 //  where e^m_i = 0 if y_i  = m,
 //        e^m_i = 1 if y_i != m,
-//  C^m_i = C if m  = y_i, 
-//  C^m_i = 0 if m != y_i, 
-//  and w_m(\alpha) = \sum_i \alpha^m_i x_i 
+//  C^m_i = C if m  = y_i,
+//  C^m_i = 0 if m != y_i,
+//  and w_m(\alpha) = \sum_i \alpha^m_i x_i
 //
-// Given: 
+// Given:
 // x, y, C
 // eps is the stopping tolerance
 //
@@ -550,7 +552,7 @@ void Solver_MCSVM_CS::Solve(double *w)
 	double eps_shrink = max(10.0*eps, 1.0); // stopping tolerance for shrinking
 	bool start_from_all = true;
 
-	// Initial alpha can be set here. Note that 
+	// Initial alpha can be set here. Note that
 	// sum_m alpha[i*nr_class+m] = 0, for all i=1,...,l-1
 	// alpha[i*nr_class+m] <= C[GETI(i)] if prob->y[i] == m
 	// alpha[i*nr_class+m] <= 0 if prob->y[i] != m
@@ -745,14 +747,14 @@ void Solver_MCSVM_CS::Solve(double *w)
 	delete [] active_size_i;
 }
 
-// A coordinate descent algorithm for 
+// A coordinate descent algorithm for
 // L1-loss and L2-loss SVM dual problems
 //
 //  min_\alpha  0.5(\alpha^T (Q + D)\alpha) - e^T \alpha,
 //    s.t.      0 <= \alpha_i <= upper_bound_i,
-// 
+//
 //  where Qij = yi yj xi^T xj and
-//  D is a diagonal matrix 
+//  D is a diagonal matrix
 //
 // In L1-SVM case:
 // 		upper_bound_i = Cp if y_i = 1
@@ -763,12 +765,12 @@ void Solver_MCSVM_CS::Solve(double *w)
 // 		D_ii = 1/(2*Cp)	if y_i = 1
 // 		D_ii = 1/(2*Cn)	if y_i = -1
 //
-// Given: 
+// Given:
 // x, y, Cp, Cn
 // eps is the stopping tolerance
 //
 // solution will be put in w
-// 
+//
 // See Algorithm 3 of Hsieh et al., ICML 2008
 
 #undef GETI
@@ -965,14 +967,14 @@ static void solve_l2r_l1l2_svc(
 }
 
 
-// A coordinate descent algorithm for 
+// A coordinate descent algorithm for
 // L1-loss and L2-loss epsilon-SVR dual problem
 //
 //  min_\beta  0.5\beta^T (Q + diag(lambda)) \beta - p \sum_{i=1}^l|\beta_i| + \sum_{i=1}^l yi\beta_i,
 //    s.t.      -upper_bound_i <= \beta_i <= upper_bound_i,
-// 
+//
 //  where Qij = xi^T xj and
-//  D is a diagonal matrix 
+//  D is a diagonal matrix
 //
 // In L1-SVM case:
 // 		upper_bound_i = C
@@ -981,13 +983,13 @@ static void solve_l2r_l1l2_svc(
 // 		upper_bound_i = INF
 // 		lambda_i = 1/(2*C)
 //
-// Given: 
+// Given:
 // x, y, p, C
 // eps is the stopping tolerance
 //
 // solution will be put in w
 //
-// See Algorithm 4 of Ho and Lin, 2012   
+// See Algorithm 4 of Ho and Lin, 2012
 
 #undef GETI
 #define GETI(i) (0)
@@ -1198,17 +1200,17 @@ static void solve_l2r_l1l2_svr(
 }
 
 
-// A coordinate descent algorithm for 
+// A coordinate descent algorithm for
 // the dual of L2-regularized logistic regression problems
 //
 //  min_\alpha  0.5(\alpha^T Q \alpha) + \sum \alpha_i log (\alpha_i) + (upper_bound_i - \alpha_i) log (upper_bound_i - \alpha_i),
 //    s.t.      0 <= \alpha_i <= upper_bound_i,
-// 
-//  where Qij = yi yj xi^T xj and 
+//
+//  where Qij = yi yj xi^T xj and
 //  upper_bound_i = Cp if y_i = 1
 //  upper_bound_i = Cn if y_i = -1
 //
-// Given: 
+// Given:
 // x, y, Cp, Cn
 // eps is the stopping tolerance
 //
@@ -1227,7 +1229,7 @@ void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, do
 	int i, s, iter = 0;
 	double *xTx = new double[l];
 	int max_iter = 1000;
-	int *index = new int[l];	
+	int *index = new int[l];
 	double *alpha = new double[2*l]; // store alpha and C - alpha
 	schar *y = new schar[l];
 	int max_inner_iter = 100; // for inner Newton
@@ -1246,7 +1248,7 @@ void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, do
 			y[i] = -1;
 		}
 	}
-	
+
 	// Initial alpha can be set here. Note that
 	// 0 < alpha[i] < upper_bound[GETI(i)]
 	// alpha[2*i] + alpha[2*i+1] = upper_bound[GETI(i)]
@@ -1377,12 +1379,12 @@ void solve_l2r_lr_dual(const problem *prob, double *w, double eps, double Cp, do
 	delete [] index;
 }
 
-// A coordinate descent algorithm for 
+// A coordinate descent algorithm for
 // L1-regularized L2-loss support vector classification
 //
 //  min_w \sum |wj| + C \sum max(0, 1-yi w^T xi)^2,
 //
-// Given: 
+// Given:
 // x, y, Cp, Cn
 // eps is the stopping tolerance
 //
@@ -1664,12 +1666,12 @@ static void solve_l1r_l2_svc(
 	delete [] xj_sq;
 }
 
-// A coordinate descent algorithm for 
+// A coordinate descent algorithm for
 // L1-regularized logistic regression problems
 //
 //  min_w \sum |wj| + C \sum log(1+exp(-yi w^T xi)),
 //
-// Given: 
+// Given:
 // x, y, Cp, Cn
 // eps is the stopping tolerance
 //
@@ -2141,8 +2143,8 @@ static void group_classes(const problem *prob, int *nr_class_ret, int **label_re
 	}
 
 	//
-	// Labels are ordered by their first occurrence in the training set. 
-	// However, for two-class sets with -1/+1 labels and -1 appears first, 
+	// Labels are ordered by their first occurrence in the training set.
+	// However, for two-class sets with -1/+1 labels and -1 appears first,
 	// we swap labels to ensure that internally the binary SVM has positive data corresponding to the +1 instances.
 	//
 	if (nr_class == 2 && label[0] == -1 && label[1] == 1)
@@ -2388,26 +2390,35 @@ model* train(const problem *prob, const parameter *param)
 			else
 			{
 				model_->w=Malloc(double, w_size*nr_class);
-				double *w=Malloc(double, w_size);
-				for(i=0;i<nr_class;i++)
 				{
-					int si = start[i];
-					int ei = si+count[i];
+					ThreadPool pool(param->concurrency);
+					for(i=0;i<nr_class;i++)
+					{
+						auto task = [&, i](){
+							problem t_sub_prob = sub_prob;
+							t_sub_prob.y = Malloc(double,sub_prob.l);
+							int si = start[i];
+							int ei = si+count[i];
+							k=0;
+							for(; k<si; k++)
+								t_sub_prob.y[k] = -1;
+							for(; k<ei; k++)
+								t_sub_prob.y[k] = +1;
+							for(; k<sub_prob.l; k++)
+								t_sub_prob.y[k] = -1;
 
-					k=0;
-					for(; k<si; k++)
-						sub_prob.y[k] = -1;
-					for(; k<ei; k++)
-						sub_prob.y[k] = +1;
-					for(; k<sub_prob.l; k++)
-						sub_prob.y[k] = -1;
+							double *w=Malloc(double, w_size);
+							train_one(&t_sub_prob, param, w, weighted_C[i], param->C);
 
-					train_one(&sub_prob, param, w, weighted_C[i], param->C);
+							for(int j=0;j<w_size;j++)
+								model_->w[j*nr_class+i] = w[j];
 
-					for(int j=0;j<w_size;j++)
-						model_->w[j*nr_class+i] = w[j];
+							free(w);
+							free(t_sub_prob.y);
+						};
+						pool.enqueue(task);
+					}
 				}
-				free(w);
 			}
 
 		}

@@ -50,6 +50,7 @@ void exit_with_help()
 	"-wi weight: weights adjust the parameter C of different classes (see README for details)\n"
 	"-v n: n-fold cross validation mode\n"
 	"-q : quiet mode (no outputs)\n"
+	"-n : concurrency, number of threads to use when training classification problem\n"
 	);
 	exit(1);
 }
@@ -186,6 +187,7 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 	param.nr_weight = 0;
 	param.weight_label = NULL;
 	param.weight = NULL;
+	param.concurrency = 1;
 	flag_cross_validation = 0;
 	bias = -1;
 
@@ -238,6 +240,10 @@ void parse_command_line(int argc, char **argv, char *input_file_name, char *mode
 			case 'q':
 				print_func = &print_null;
 				i--;
+				break;
+
+			case 'n':
+				param.concurrency = atoi(argv[i]);
 				break;
 
 			default:
