@@ -50,7 +50,7 @@ void exit_with_help()
 	"-wi weight: weights adjust the parameter C of different classes (see README for details)\n"
 	"-v n: n-fold cross validation mode\n"
 	"-q : quiet mode (no outputs)\n"
-	"-n : concurrency, number of threads to use when training classification problem\n"
+	"-n n : use n threads when training classification problem\n"
 	);
 	exit(1);
 }

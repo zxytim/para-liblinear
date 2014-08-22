@@ -150,7 +150,7 @@ options:
 -wi weight: weights adjust the parameter C of different classes (see README for details)
 -v n: n-fold cross validation mode
 -q : quiet mode (no outputs)
--n : concurrency, number of threads to use when training classification problem
+-n : use n threads when training classification problem
 
 
 Option -v randomly splits the data into n parts and calculates cross
